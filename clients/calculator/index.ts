@@ -3,7 +3,6 @@ import { AvailableProgram } from "../../shared/enums/index.ts";
 import {
   configureClientAccount,
   connect,
-  createBufferInstruction,
   getAccountInfo,
   getLocalAccount,
   loadProgram,
@@ -12,13 +11,12 @@ import {
 import { CALCULATOR_SIZE } from "./constants/index.ts";
 import { Operation } from "./enums/index.ts";
 import { CalculatorInstruction, CalculatorSchema } from "./models/index.ts";
-import { serialize } from "node:v8";
 
 export const run = async () => {
-  const connection = await connect();
+  const connection = connect();
   const localAccount = await getLocalAccount();
   const program = await loadProgram(AvailableProgram.Calculator);
-  const { publicKey: clientPublicKey, account } = await configureClientAccount(
+  const { publicKey: clientPublicKey } = await configureClientAccount(
     connection,
     localAccount,
     program.publicKey,
@@ -26,15 +24,12 @@ export const run = async () => {
   );
 
   const ix = new CalculatorInstruction(Operation.Subtract, 3);
-
-  const ixFields = CalculatorInstruction.getFields();
-  const ixData = createBufferInstruction(ixFields, ix);
+  const ixSerializedData = ix.serialize();
   console.log(
     `Dispatching instruction ${
       Deno.inspect({
         ix,
-        serialized: ix.serialize(),
-        ixData,
+        ixSerializedData,
       })
     }...`,
   );
@@ -46,7 +41,7 @@ export const run = async () => {
     localAccount,
     program.publicKey,
     ixAccounts,
-    ix.serialize(),
+    ixSerializedData,
   );
   const updatedAccountInfo = await getAccountInfo(connection, clientPublicKey);
   if (!updatedAccountInfo) {
