@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "nodeModulesDir": "auto",
+  "tasks": {
+    "solana:start": "solana-test-validator",
+    "solana:list-programs": "solana program-v4 show",
+    "solana:start-new": "solana-test-validator --reset",
+    "solana:clean": "scripts.sh clean",
+    "solana:reset": "scripts.sh reset",
+    "solana:build": "scripts.sh build",
+    "solana:deploy": "scripts.sh deploy",
+    "solana:reset-and-build": "scripts.sh reset-and-build",
+    "dev": "deno run --watch --allow-read --allow-write --allow-sys --allow-env --allow-ffi --allow-net main.ts"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "@std/path": "jsr:@std/path@^1.0.8",
+    "@std/yaml": "jsr:@std/yaml@^1.0.5"
+  }
+}
