@@ -1,6 +1,6 @@
 #! /bin/bash
 
-SOLANA_PROGRAMS=("hello_solana" "calculator")
+SOLANA_PROGRAMS=("hello_solana" "calculator" "transfer_sol")
 
 case $1 in
     "reset")

@@ -7036,6 +7036,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "transfer_sol"
+version = "0.1.0"
+dependencies = [
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+]
+
+[[package]]
 name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

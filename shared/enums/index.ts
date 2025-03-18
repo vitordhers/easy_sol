@@ -1,6 +1,7 @@
 export enum AvailableProgram {
   HelloSolana = "hello_solana",
   Calculator = "calculator",
+  TransferSol = "transfer_sol"
 }
 
 export enum SolanaRpcUrl {

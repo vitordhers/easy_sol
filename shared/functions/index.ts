@@ -7,19 +7,79 @@ import {
   sendAndConfirmTransaction,
   SystemProgram,
   Transaction,
+  TransactionConfirmationStrategy,
   TransactionInstruction,
 } from "npm:@solana/web3.js";
 import { join } from "@std/path";
 import { parse as parseYaml } from "@std/yaml";
 import { Buffer } from "node:buffer";
 import { AvailableProgram, SolanaRpcUrl } from "../enums/index.ts";
-import { CONFIG_FILE_PATH, PROGRAMS_PATH } from "../constants/index.ts";
+import {
+  CONFIG_FILE_PATH,
+  PROGRAMS_PATH,
+  WALLETS_PATH,
+} from "../constants/index.ts";
 import { CliConfig } from "../interfaces/index.ts";
 
 export const { inspect, readFile } = Deno;
 
-export const connect = (url = SolanaRpcUrl.Local) => {
-  return new Connection(url, "confirmed");
+export const connect = (url = SolanaRpcUrl.Local) => { return new Connection(url, "confirmed"); };
+export const createNewWalletProgramatically = async (walletName: string) => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(walletName);
+  const hashBuffer = new Uint8Array(await crypto.subtle.digest("SHA-256", data));
+  const walletKeypair = Keypair.fromSeed(hashBuffer);
+  console.log(
+    `Generated wallet for pubKey ${walletKeypair.publicKey.toBase58()}`,
+  );
+  await Deno.writeTextFile(
+    `${WALLETS_PATH}/${walletName}.json`,
+    JSON.stringify(Array.from(walletKeypair.secretKey)),
+    { createNew: true },
+  );
+  return walletKeypair;
+};
+
+export const configureNewWallet = async (
+  walletName: string,
+  connectionForAirdrop?: Connection,
+) => {
+  let walletKeypair: Keypair | undefined = undefined;
+  const walletSecretPath = `${WALLETS_PATH}/${walletName}.json`;
+  try {
+    await Deno.stat(walletSecretPath);
+    walletKeypair = await createKeypairFromFile(walletSecretPath);
+  } catch (error) {
+    if (!(error instanceof Deno.errors.NotFound)) {
+      console.error(`Error while loading ${walletName} wallet`);
+      throw error;
+    }
+    console.log(
+      `Wallet secret for ${walletName} not found, creating a new one...`,
+    );
+  }
+  if (!walletKeypair) {
+    walletKeypair = await createNewWalletProgramatically(walletName);
+  }
+  if (connectionForAirdrop) {
+    console.log(`Requesting airdrop of 2 SOL to ${walletName} wallet...`);
+    const airdropSignature = await connectionForAirdrop.requestAirdrop(
+      walletKeypair.publicKey,
+      2 * LAMPORTS_PER_SOL,
+    );
+    const lastestBlockHash = await connectionForAirdrop.getLatestBlockhash();
+    const confirmationStrategy: TransactionConfirmationStrategy = {
+      signature: airdropSignature,
+      lastValidBlockHeight: lastestBlockHash.lastValidBlockHeight,
+      blockhash: lastestBlockHash.blockhash,
+    };
+    await connectionForAirdrop.confirmTransaction(
+      confirmationStrategy,
+      "confirmed",
+    );
+    console.log(`airdrop confirmed successfully!`);
+  }
+  return walletKeypair;
 };
 
 export const createKeypairFromFile = async (path: string) => {
