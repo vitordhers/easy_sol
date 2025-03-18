@@ -13,6 +13,7 @@
     "solana:build": "scripts.sh build",
     "solana:deploy": "scripts.sh deploy",
     "solana:reset-and-build": "scripts.sh reset-and-build",
+    "solana:logs": "scripts.sh logs",
     "dev": "deno run --watch --allow-read --allow-write --allow-sys --allow-env --allow-ffi --allow-net main.ts"
   },
   "imports": {
