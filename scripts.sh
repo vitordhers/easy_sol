@@ -41,4 +41,35 @@ case $1 in
         done
         solana program-v4 show
         ;;
+    "logs")
+        PROGRAM_ID=""
+        LINES=10
+
+        shift   
+        while [[ $# -gt 0 ]]; do
+            case $1 in
+                --program-id)
+                    PROGRAM_ID="$2"
+                    shift 2
+                    ;;
+                --lines)
+                    LINES="$2"
+                    shift 2
+                    ;;
+                *)
+                    echo "Unknown argument: $1"
+                    ;;
+            esac
+        done
+        if [[ -z "$PROGRAM_ID" ]]; then
+            echo "Error: --program-id is required."
+            exit 1
+        fi
+        echo "Streaming logs for Program ID: $PROGRAM_ID (Showing last $LINES lines per match)"
+        solana logs | grep --line-buffered "$PROGRAM_ID invoke" -A "$LINES"
+        ;;
+
+    *)
+        echo "Usage: $0 {start|logs}"
+        ;;
 esac
