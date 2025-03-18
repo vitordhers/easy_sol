@@ -1,6 +1,8 @@
 import { AvailableProgram } from "./shared/enums/index.ts";
 import { run as runHelloSolana } from "./clients/hello_solana/index.ts";
 import { run as runCalculator } from "./clients/calculator/index.ts";
+import { run as runTransferSol } from "./clients/transfer_sol/index.ts";
+
 const main = async () => {
   const args = Deno.args;
 
@@ -37,6 +39,9 @@ const main = async () => {
     }
     case AvailableProgram.Calculator: {
       return await runCalculator();
+    }
+    case AvailableProgram.TransferSol: {
+      return await runTransferSol();
     }
     default: {
       throw new Error(
