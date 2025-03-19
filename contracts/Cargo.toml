@@ -1,12 +1,12 @@
 cargo-features = ["edition2024"]
 
 [workspace]
-members = ["hello_solana", "calculator", "transfer-sol"]
+members = ["hello_solana", "calculator", "transfer-sol", "mint"]
 resolver = "3"
 
 [workspace.dependencies]
 borsh = "1.5.5"
 borsh-derive = "1.5.5"
 solana-program = "2.2.1"
-
-
+spl-token = "7.0.0"
+spl-associated-token-account = "6.0.0"
