@@ -1,15 +1,12 @@
-import { deserialize, field, serialize } from "npm:@dao-xyz/borsh";
+import { field } from "npm:@dao-xyz/borsh";
 import { Operation } from "../enums/index.ts";
-import { Buffer } from "node:buffer";
 
 export class CalculatorSchema {
   @field({ type: "f32" })
-  value: number = 0;
+  value: number;
 
-  constructor() {}
-
-  static deserialize(buffer: Buffer) {
-    return deserialize(buffer, CalculatorSchema);
+  constructor(value?: number) {
+    this.value = value || 0;
   }
 }
 
@@ -22,7 +19,7 @@ export class OperationSchema {
   }
 }
 
-export class CalculatorInstruction {
+export class CalculatorInstructionSchema {
   @field({ type: OperationSchema })
   operation: OperationSchema;
 
@@ -32,9 +29,5 @@ export class CalculatorInstruction {
   constructor(operation?: Operation, value?: number) {
     this.operation = new OperationSchema(operation);
     this.operating_value = value || 0;
-  }
-
-  serialize() {
-    return serialize(this);
   }
 }

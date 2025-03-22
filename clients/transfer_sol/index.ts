@@ -27,26 +27,24 @@ export const run = async () => {
     0;
 
   console.log(
-    `Wallets initial state: ${
-      Deno.inspect({
-        donRamon: {
-          address: donRamonKeypair.publicKey.toBase58(),
-          initialBalance: lamportsToSol(donRamonInitialBalance),
-        },
-        drChatuba: {
-          address: drChatubaKeypair.publicKey.toBase58(),
-          initialBalance: lamportsToSol(drChatubaInitialBalance),
-        },
-        gloria: {
-          address: gloriaKeypair.publicKey.toBase58(),
-          initialBalance: lamportsToSol(gloriaInitialBalance),
-        },
-        donSantiagoKeypair: {
-          address: donSantiagoKeypair.publicKey.toBase58(),
-          initialBalance: lamportsToSol(donSantiagoInitialBalance),
-        },
-      })
-    }`,
+    `Wallets initial state: ${Deno.inspect({
+      DonRamon: {
+        address: donRamonKeypair.publicKey.toBase58(),
+        initialBalance: lamportsToSol(donRamonInitialBalance),
+      },
+      DrChatuba: {
+        address: drChatubaKeypair.publicKey.toBase58(),
+        initialBalance: lamportsToSol(drChatubaInitialBalance),
+      },
+      Gloria: {
+        address: gloriaKeypair.publicKey.toBase58(),
+        initialBalance: lamportsToSol(gloriaInitialBalance),
+      },
+      DonSantiago: {
+        address: donSantiagoKeypair.publicKey.toBase58(),
+        initialBalance: lamportsToSol(donSantiagoInitialBalance),
+      },
+    })}`,
   );
   console.log("Don Ramon sends 0.5 SOL to Gloria...");
   const result0 = await sendLamports(
@@ -106,27 +104,25 @@ export const run = async () => {
     0;
 
   console.log(
-    `Wallets final state: ${
-      Deno.inspect({
-        donRamon: {
-          finalBalance: lamportsToSol(donRamonFinalBalance),
-          diff: lamportsToSol(donRamonFinalBalance - donRamonInitialBalance),
-        },
-        drChatuba: {
-          finalBalance: lamportsToSol(drChatubaFinalBalance),
-          diff: lamportsToSol(drChatubaFinalBalance - drChatubaInitialBalance),
-        },
-        gloria: {
-          finalBalance: lamportsToSol(gloriaFinalBalance),
-          diff: lamportsToSol(gloriaFinalBalance - gloriaInitialBalance),
-        },
-        donSantiagoKeypair: {
-          finalBalance: lamportsToSol(donSantiagoFinalBalance),
-          diff: lamportsToSol(
-            donSantiagoFinalBalance - donSantiagoInitialBalance,
-          ),
-        },
-      })
-    }`,
+    `Wallets final state: ${Deno.inspect({
+      DonRamon: {
+        finalBalance: lamportsToSol(donRamonFinalBalance),
+        diff: lamportsToSol(donRamonFinalBalance - donRamonInitialBalance),
+      },
+      DrChatuba: {
+        finalBalance: lamportsToSol(drChatubaFinalBalance),
+        diff: lamportsToSol(drChatubaFinalBalance - drChatubaInitialBalance),
+      },
+      Gloria: {
+        finalBalance: lamportsToSol(gloriaFinalBalance),
+        diff: lamportsToSol(gloriaFinalBalance - gloriaInitialBalance),
+      },
+      DonSantiago: {
+        finalBalance: lamportsToSol(donSantiagoFinalBalance),
+        diff: lamportsToSol(
+          donSantiagoFinalBalance - donSantiagoInitialBalance,
+        ),
+      },
+    })}`,
   );
 };

@@ -1,12 +1,10 @@
 import { field } from "npm:@dao-xyz/borsh";
-import { SerializableSchema } from "../../../shared/models.ts";
 
-export class TransferSchema extends SerializableSchema {
+export class TransferSchema {
   @field({ type: "u64" })
   value: bigint;
 
-  constructor(value: bigint) {
-    super();
-    this.value = value;
+  constructor(value?: bigint) {
+    this.value = value || 0n;
   }
 }

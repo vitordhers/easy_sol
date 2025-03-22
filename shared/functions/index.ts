@@ -23,11 +23,15 @@ import { CliConfig } from "../interfaces/index.ts";
 
 export const { inspect, readFile } = Deno;
 
-export const connect = (url = SolanaRpcUrl.Local) => { return new Connection(url, "confirmed"); };
+export const connect = (url = SolanaRpcUrl.Local) => {
+  return new Connection(url, "confirmed");
+};
 export const createNewWalletProgramatically = async (walletName: string) => {
   const encoder = new TextEncoder();
   const data = encoder.encode(walletName);
-  const hashBuffer = new Uint8Array(await crypto.subtle.digest("SHA-256", data));
+  const hashBuffer = new Uint8Array(
+    await crypto.subtle.digest("SHA-256", data),
+  );
   const walletKeypair = Keypair.fromSeed(hashBuffer);
   console.log(
     `Generated wallet for pubKey ${walletKeypair.publicKey.toBase58()}`,
@@ -166,8 +170,8 @@ export const configureClientAccount = async (
     localKeypair,
   ]);
   console.log(`Client account created successfully.`, result);
-  clientAccount = (await connection.getAccountInfo(clientPublicKey)) ||
-    undefined;
+  clientAccount =
+    (await connection.getAccountInfo(clientPublicKey)) || undefined;
   if (!clientAccount) {
     throw new Error(`Client account is missing`);
   }
@@ -188,15 +192,12 @@ export const runProgram = async (
   localKeypair: Keypair,
   programId: PublicKey,
   accountsMeta: AccountMeta[],
-  ixData?: Uint8Array,
+  ixData: Buffer = Buffer.alloc(0),
 ) => {
-  if (!ixData) {
-    ixData = Buffer.alloc(0);
-  }
   const ix = new TransactionInstruction({
     keys: accountsMeta,
     programId,
-    data: ixData instanceof Buffer ? ixData : Buffer.from(ixData),
+    data: ixData,
   });
 
   return await sendAndConfirmTransaction(

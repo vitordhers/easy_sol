@@ -11,6 +11,7 @@ import {
   TransactionInstruction,
 } from "npm:@solana/web3.js";
 import { TransferSchema } from "../models/index.ts";
+import { SerializationHelper } from "../../../shared/models.ts";
 
 export const sendLamports = async (
   connection: Connection,
@@ -19,7 +20,8 @@ export const sendLamports = async (
   to: PublicKey,
   amountInLamports: bigint,
 ) => {
-  const data = new TransferSchema(amountInLamports).serialize();
+  const ixData = new TransferSchema(amountInLamports);
+  const ixSerializedData = SerializationHelper.serialize(ixData);
   const accountsMetadata: AccountMeta[] = [
     { pubkey: from.publicKey, isSigner: true, isWritable: true },
     { pubkey: to, isSigner: false, isWritable: true },
@@ -28,7 +30,7 @@ export const sendLamports = async (
   const ix = new TransactionInstruction({
     keys: accountsMetadata,
     programId,
-    data: Buffer.from(data),
+    data: ixSerializedData,
   });
   return await sendAndConfirmTransaction(
     connection,
