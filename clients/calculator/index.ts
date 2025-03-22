@@ -8,30 +8,34 @@ import {
   loadProgram,
   runProgram,
 } from "../../shared/functions/index.ts";
-import { CALCULATOR_SIZE } from "./constants/index.ts";
 import { Operation } from "./enums/index.ts";
-import { CalculatorInstruction, CalculatorSchema } from "./models/index.ts";
+import {
+  CalculatorInstructionSchema,
+  CalculatorSchema,
+} from "./models/index.ts";
+import { SerializationHelper } from "../../shared/models.ts";
 
 export const run = async () => {
   const connection = connect();
   const localAccount = await getLocalAccount();
   const program = await loadProgram(AvailableProgram.Calculator);
+  const calculatorAccountSize = SerializationHelper.getDataSize(
+    new CalculatorSchema(),
+  );
   const { publicKey: clientPublicKey } = await configureClientAccount(
     connection,
     localAccount,
     program.publicKey,
-    CALCULATOR_SIZE,
+    calculatorAccountSize,
   );
 
-  const ix = new CalculatorInstruction(Operation.Subtract, 3);
-  const ixSerializedData = ix.serialize();
+  const ix = new CalculatorInstructionSchema(Operation.Subtract, 3);
+  const ixSerializedData = SerializationHelper.serialize(ix);
   console.log(
-    `Dispatching instruction ${
-      Deno.inspect({
-        ix,
-        ixSerializedData,
-      })
-    }...`,
+    `Dispatching instruction ${Deno.inspect({
+      ix,
+      ixSerializedData,
+    })}...`,
   );
   const ixAccounts: AccountMeta[] = [
     { pubkey: clientPublicKey, isSigner: false, isWritable: true },
@@ -49,7 +53,10 @@ export const run = async () => {
   }
   console.log(
     Deno.inspect({
-      decodedData: CalculatorSchema.deserialize(updatedAccountInfo.data),
+      decodedData: SerializationHelper.deserialize(
+        updatedAccountInfo.data,
+        CalculatorSchema,
+      ),
     }),
   );
 };
