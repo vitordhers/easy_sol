@@ -1,7 +1,7 @@
 cargo-features = ["edition2024"]
 
 [package]
-name = "mint_nft"
+name = "tokens"
 version = "0.1.0"
 edition = "2024"
 

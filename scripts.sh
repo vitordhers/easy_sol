@@ -1,6 +1,6 @@
 #! /bin/bash
 
-SOLANA_PROGRAMS=("hello_solana" "calculator" "transfer_sol")
+SOLANA_PROGRAMS=("hello_solana" "calculator" "transfer_sol", "tokens")
 CLONE_UPGRADEABLE_PROGRAMS=("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
 
 case $1 in
@@ -56,7 +56,7 @@ case $1 in
         for x in $(solana program-v4 show | awk 'RP==0 {print $1}'); do 
             if [[ $x != "Program" ]]; 
             then 
-                solana program-v4 close $x; 
+                solana program-v4 close --program-id $x; 
             fi
         done
         cargo clean --manifest-path=./contracts/Cargo.toml

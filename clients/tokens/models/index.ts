@@ -1,10 +1,9 @@
 import { field, variant } from "npm:@dao-xyz/borsh";
-import { SerializableSchema } from "../../../shared/models.ts";
 
-export abstract class Super extends SerializableSchema {}
+export abstract class TokenData {}
 
 @variant(0)
-export class FungibleTokenData extends Super {
+export class FungibleTokenData extends TokenData {
   @field({ type: "u8" })
   decimals: number;
 
@@ -27,7 +26,7 @@ export class FungibleTokenData extends Super {
 }
 
 @variant(1)
-export class FungibleAssetData extends Super {
+export class FungibleAssetData extends TokenData {
   @field({ type: "u8" })
   decimals: number;
 
@@ -42,7 +41,7 @@ export class FungibleAssetData extends Super {
 }
 
 @variant(2)
-export class NonFungibleTokenData extends Super {
+export class NonFungibleTokenData extends TokenData {
   constructor() {
     super();
   }

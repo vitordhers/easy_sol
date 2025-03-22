@@ -2,6 +2,7 @@ import { AvailableProgram } from "./shared/enums/index.ts";
 import { run as runHelloSolana } from "./clients/hello_solana/index.ts";
 import { run as runCalculator } from "./clients/calculator/index.ts";
 import { run as runTransferSol } from "./clients/transfer_sol/index.ts";
+import { run as runTokens } from "./clients/tokens/index.ts";
 
 const main = async () => {
   const args = Deno.args;
@@ -20,11 +21,9 @@ const main = async () => {
   }
   if (!availablePrograms.includes(program as AvailableProgram)) {
     throw new Error(
-      `Program ${program} is not a valid program! Valid programs are: ${
-        availablePrograms.join(
-          ", ",
-        )
-      }`,
+      `Program ${program} is not a valid program! Valid programs are: ${availablePrograms.join(
+        ", ",
+      )}`,
     );
   }
   const info = await Deno.stat("contracts/target/deploy");
@@ -43,13 +42,14 @@ const main = async () => {
     case AvailableProgram.TransferSol: {
       return await runTransferSol();
     }
+    case AvailableProgram.Tokens: {
+      return await runTokens();
+    }
     default: {
       throw new Error(
-        `Program ${program} is not a valid program! Valid programs are: ${
-          availablePrograms.join(
-            ", ",
-          )
-        }`,
+        `Program ${program} is not a valid program! Valid programs are: ${availablePrograms.join(
+          ", ",
+        )}`,
       );
     }
   }

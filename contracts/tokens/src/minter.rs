@@ -193,6 +193,7 @@ impl<'a> Minter<'a> {
         self.create_mint_account()?;
         self.initialize_mint()?;
         self.create_token_account()?;
+        self.mint()?;
         match &self.data {
             TokenData::Fungible(data) => {
                 if data.should_freeze_after_mint {
