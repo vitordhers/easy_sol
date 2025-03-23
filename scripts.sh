@@ -1,6 +1,6 @@
 #! /bin/bash
 
-SOLANA_PROGRAMS=("hello_solana" "calculator" "transfer_sol", "tokens")
+SOLANA_PROGRAMS=("hello_solana" "calculator" "transfer_sol" "tokens")
 CLONE_UPGRADEABLE_PROGRAMS=("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
 
 case $1 in
@@ -41,6 +41,7 @@ case $1 in
         ;;
     "clean")
         cargo clean --manifest-path=./contracts/Cargo.toml 
+        rm -rf contracts/target/deploy
         ;;
     "build")
         cargo build-sbf --manifest-path=./contracts/Cargo.toml
@@ -48,24 +49,16 @@ case $1 in
     "deploy")
         cargo build-sbf --manifest-path=./contracts/Cargo.toml
         for program in "${SOLANA_PROGRAMS[@]}"; do
-            solana program-v4 deploy --program-keypair ./contracts/target/deploy/$program-keypair.json ./contracts/target/deploy/$program.so
+          deploy_output=$(solana program-v4 deploy --program-keypair ./contracts/target/deploy/$program-keypair.json ./contracts/target/deploy/$program.so)
+          program_id=$(echo "$deploy_output" | awk '/Program Id:/ {print $NF}')
+          echo "$program id: $program_id"
         done
         solana program-v4 show
         ;;
-    "reset-and-build")
-        for x in $(solana program-v4 show | awk 'RP==0 {print $1}'); do 
-            if [[ $x != "Program" ]]; 
-            then 
-                solana program-v4 close --program-id $x; 
-            fi
-        done
-        cargo clean --manifest-path=./contracts/Cargo.toml
-        rm -rf contracts/target/deploy
-        cargo build-sbf --manifest-path=./contracts/Cargo.toml
-        for program in "${SOLANA_PROGRAMS[@]}"; do
-          solana program-v4 deploy --program-keypair ./contracts/target/deploy/$program-keypair.json ./contracts/target/deploy/$program.so  
-        done
-        solana program-v4 show
+    "reset-and-deploy")
+        "$0" clean 
+        "$0" build
+        "$0" deploy
         ;;
     "logs")
         PROGRAM_ID=""

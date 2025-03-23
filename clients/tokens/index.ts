@@ -65,7 +65,7 @@ export const run = async () => {
       isWritable: false,
     },
   ];
-  for (const tokenData in tokensData) {
+  for (const tokenData of tokensData) {
     const mintKeypair = Keypair.generate();
     const tokenAddress = await getAssociatedTokenAddress(
       mintKeypair.publicKey,
@@ -73,7 +73,7 @@ export const run = async () => {
     );
 
     console.log(
-      `Minting token with data ${Deno.inspect({ data: tokensData })} at ${Deno.inspect(
+      `Minting token with data ${Deno.inspect({ data: tokenData })} at ${Deno.inspect(
         {
           mintAddress: mintKeypair.publicKey.toBase58(),
           tokenAddress: tokenAddress,
