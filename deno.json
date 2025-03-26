@@ -5,14 +5,14 @@
   },
   "nodeModulesDir": "auto",
   "tasks": {
-    "solana:start": "solana-test-validator",
+    "solana:start": "scripts.sh start",
+    "solana:start-new": "scripts.sh start-new",
     "solana:list-programs": "solana program-v4 show",
-    "solana:start-new": "solana-test-validator --reset",
     "solana:clean": "scripts.sh clean",
     "solana:reset": "scripts.sh reset",
     "solana:build": "scripts.sh build",
     "solana:deploy": "scripts.sh deploy",
-    "solana:reset-and-build": "scripts.sh reset-and-build",
+    "solana:redeploy": "scripts.sh reset-and-deploy",
     "solana:logs": "scripts.sh logs",
     "dev": "deno run --watch --allow-read --allow-write --allow-sys --allow-env --allow-ffi --allow-net main.ts"
   },
