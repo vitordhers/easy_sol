@@ -1,6 +1,14 @@
 use {
     crate::data::*,
     borsh::{BorshDeserialize, BorshSerialize},
+    mpl_token_metadata::{
+        ID as MPL_METADATA_ID,
+        instructions::{
+            CreateMasterEditionV3, CreateMasterEditionV3InstructionArgs, CreateMetadataAccountV3,
+            CreateMetadataAccountV3InstructionArgs,
+        },
+        types::{Collection, CollectionDetails, Creator, DataV2, UseMethod, Uses},
+    },
     solana_program::{
         account_info::{AccountInfo, next_account_info},
         msg,
@@ -19,6 +27,8 @@ pub struct MinterAccounts<'a> {
     mint: &'a AccountInfo<'a>,
     token: &'a AccountInfo<'a>,
     mint_authority: &'a AccountInfo<'a>,
+    metadata: &'a AccountInfo<'a>,
+    master_edition: Option<&'a AccountInfo<'a>>,
 }
 
 pub struct MinterPrograms<'a> {
@@ -40,10 +50,17 @@ impl<'a> MinterAccounts<'a> {
         let mint = next_account_info(iter)?;
         let token = next_account_info(iter)?;
         let mint_authority = next_account_info(iter)?;
+        let metadata = next_account_info(iter)?;
+        let master_edition = match next_account_info(iter) {
+            Ok(account) => Some(account),
+            Err(_) => None,
+        };
         Ok(Self {
             mint,
             token,
             mint_authority,
+            metadata,
+            master_edition,
         })
     }
 }
@@ -167,6 +184,118 @@ impl<'a> Minter<'a> {
         ];
         invoke(&instruction, &account_infos)?;
         msg!("Token minted successfully!");
+        Ok(())
+    }
+
+    fn create_metadata_account(&self) -> Result<(), ProgramError> {
+        let data = match &self.data {
+            TokenData::Fungible(FungibleTokenParams { metadata, .. }) => DataV2 {
+                name: metadata.name.clone(),
+                uri: metadata.uri.clone(),
+                symbol: metadata.symbol.clone(),
+                uses: None,
+                creators: None,
+                collection: None,
+                seller_fee_basis_points: 0,
+            },
+            TokenData::FungibleAsset(FungibleAssetParams { metadata, .. }) => DataV2 {
+                name: metadata.name.clone(),
+                uri: metadata.uri.clone(),
+                symbol: metadata.symbol.clone(),
+                uses: if metadata.uses > 0 {
+                    Some(Uses {
+                        total: metadata.uses,
+                        remaining: metadata.uses,
+                        use_method: UseMethod::Burn,
+                    })
+                } else {
+                    None
+                },
+                creators: None,
+                collection: None,
+                seller_fee_basis_points: 0,
+            },
+            TokenData::NonFungible(NonFungibleTokenParams { metadata, .. }) => DataV2 {
+                name: metadata.name.clone(),
+                uri: metadata.uri.clone(),
+                symbol: metadata.symbol.clone(),
+                uses: None,
+                creators: metadata.creators_addresses.clone().map(|addresses| {
+                    addresses
+                        .iter()
+                        .map(|addr| Creator {
+                            share: 0,
+                            address: *addr,
+                            verified: false,
+                        })
+                        .collect()
+                }),
+                collection: metadata
+                    .collection_address
+                    .map(|collection_addr| Collection {
+                        verified: false,
+                        key: collection_addr,
+                    }),
+                seller_fee_basis_points: metadata.seller_fee_basis_points,
+            },
+        };
+        let args = CreateMetadataAccountV3InstructionArgs {
+            data,
+            is_mutable: false,
+            collection_details: None,
+        };
+        let factory = CreateMetadataAccountV3 {
+            metadata: *self.accounts.metadata.key,
+            mint: *self.accounts.mint.key,
+            payer: *self.accounts.mint_authority.key,
+            update_authority: (*self.accounts.mint_authority.key, true),
+            mint_authority: *self.accounts.mint_authority.key,
+            system_program: *self.programs.system.key,
+            rent: Some(*self.programs.rent.key),
+        };
+
+        let instruction = factory.instruction(args);
+        let account_infos = [
+            self.accounts.metadata.clone(),
+            self.accounts.mint.clone(),
+            self.accounts.token.clone(),
+            self.accounts.mint_authority.clone(),
+        ];
+        invoke(&instruction, &account_infos)?;
+
+        Ok(())
+    }
+
+    fn create_master_edition(&self) -> Result<(), ProgramError> {
+        match self.data {
+            TokenData::NonFungible(_) => {}
+            _ => return Ok(()),
+        }
+        let args = CreateMasterEditionV3InstructionArgs { max_supply: None };
+        let master_edition_account = self.accounts.master_edition.unwrap();
+        let factory = CreateMasterEditionV3 {
+            metadata: *self.accounts.metadata.key,
+            mint: *self.accounts.mint.key,
+            mint_authority: *self.accounts.mint_authority.key,
+            payer: *self.accounts.mint_authority.key,
+            update_authority: *self.accounts.mint_authority.key,
+            edition: *master_edition_account.key,
+            token_program: MPL_METADATA_ID,
+            system_program: *self.programs.system.key,
+            rent: Some(*self.programs.rent.key),
+        };
+
+        let instruction = factory.instruction(args);
+        let account_infos = [
+            self.accounts.metadata.clone(),
+            self.accounts.mint.clone(),
+            self.accounts.mint_authority.clone(),
+            master_edition_account.clone(),
+
+        ];
+
+        invoke(&instruction, &account_infos)?;
+
         Ok(())
     }
 

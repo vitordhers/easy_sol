@@ -13,6 +13,8 @@ spl-associated-token-account = { workspace = true, features = [
 ] }
 borsh = { workspace = true }
 borsh-derive = { workspace = true }
+mpl-token-metadata = { workspace = true }
+
 
 [dev-dependencies]
 solana-program-test = "2.2.0"
