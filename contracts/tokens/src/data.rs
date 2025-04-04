@@ -3,24 +3,24 @@ use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct FungibleTokenMetadata {
-    pub uri: String,
     pub name: String,
     pub symbol: String,
+    pub uri: String,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct FungibleAssetMetadata {
-    pub uri: String,
     pub name: String,
     pub symbol: String,
+    pub uri: String,
     pub uses: u64,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct NonFungibleTokenMetadata {
-    pub uri: String,
     pub name: String,
     pub symbol: String,
+    pub uri: String,
     pub seller_fee_basis_points: u16,
     pub creators_addresses: Option<Vec<Pubkey>>,
     pub collection_address: Option<Pubkey>,

@@ -1,4 +1,4 @@
-import { Commitment } from "npm:@solana/web3.js";
+import { Commitment, PublicKey } from "npm:@solana/web3.js";
 
 export interface CliConfig {
   json_rpc_url: string;
@@ -6,4 +6,9 @@ export interface CliConfig {
   keypair_path: string;
   address_labels: Record<string, any>;
   commitment: Commitment;
+}
+
+export interface PDA {
+  pda: PublicKey;
+  bump: number;
 }

@@ -1,0 +1,12 @@
+{
+  "name": "Food",
+  "symbol": "Food",
+  "description": "Fungible game food credits",
+  "image": "https://gateway.pinata.cloud/ipfs/bafkreie7n6n44ztn5wruo4ikm6phbfh7qwltdb7ppqwzrqfq36q32caoqi",
+  "decimals": 0,
+  "properties": {
+    "category": "fungible_asset",
+    "use_case": "game_currency",
+    "utility": "in-game purchases"
+  }
+}

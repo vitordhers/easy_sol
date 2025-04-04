@@ -7,7 +7,7 @@ use {
             CreateMasterEditionV3, CreateMasterEditionV3InstructionArgs, CreateMetadataAccountV3,
             CreateMetadataAccountV3InstructionArgs,
         },
-        types::{Collection, CollectionDetails, Creator, DataV2, UseMethod, Uses},
+        types::{Collection, Creator, DataV2, UseMethod, Uses},
     },
     solana_program::{
         account_info::{AccountInfo, next_account_info},
@@ -36,6 +36,7 @@ pub struct MinterPrograms<'a> {
     system: &'a AccountInfo<'a>,
     token: &'a AccountInfo<'a>,
     associated_token: &'a AccountInfo<'a>,
+    metadata: &'a AccountInfo<'a>,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
@@ -51,10 +52,14 @@ impl<'a> MinterAccounts<'a> {
         let token = next_account_info(iter)?;
         let mint_authority = next_account_info(iter)?;
         let metadata = next_account_info(iter)?;
-        let master_edition = match next_account_info(iter) {
-            Ok(account) => Some(account),
-            Err(_) => None,
-        };
+        let mut master_edition = None;
+        if iter.len() > 5 {
+            master_edition = match next_account_info(iter) {
+                Ok(account) => Some(account),
+                Err(_) => None,
+            };
+        }
+
         Ok(Self {
             mint,
             token,
@@ -71,12 +76,14 @@ impl<'a> MinterPrograms<'a> {
         let system = next_account_info(iter)?;
         let token = next_account_info(iter)?;
         let associated_token = next_account_info(iter)?;
+        let metadata = next_account_info(iter)?;
 
         Ok(Self {
             rent,
             system,
             token,
             associated_token,
+            metadata,
         })
     }
 }
@@ -260,9 +267,10 @@ impl<'a> Minter<'a> {
             self.accounts.mint.clone(),
             self.accounts.token.clone(),
             self.accounts.mint_authority.clone(),
+            self.programs.rent.clone(),
         ];
         invoke(&instruction, &account_infos)?;
-
+        msg!("Metadata account created successfully!");
         Ok(())
     }
 
@@ -271,27 +279,30 @@ impl<'a> Minter<'a> {
             TokenData::NonFungible(_) => {}
             _ => return Ok(()),
         }
-        let args = CreateMasterEditionV3InstructionArgs { max_supply: None };
+        let args = CreateMasterEditionV3InstructionArgs {
+            max_supply: Some(1),
+        };
         let master_edition_account = self.accounts.master_edition.unwrap();
         let factory = CreateMasterEditionV3 {
+            edition: *master_edition_account.key,
             metadata: *self.accounts.metadata.key,
             mint: *self.accounts.mint.key,
             mint_authority: *self.accounts.mint_authority.key,
             payer: *self.accounts.mint_authority.key,
             update_authority: *self.accounts.mint_authority.key,
-            edition: *master_edition_account.key,
-            token_program: MPL_METADATA_ID,
+            token_program: *self.programs.token.key,
             system_program: *self.programs.system.key,
             rent: Some(*self.programs.rent.key),
         };
 
         let instruction = factory.instruction(args);
         let account_infos = [
+            master_edition_account.clone(),
             self.accounts.metadata.clone(),
             self.accounts.mint.clone(),
+            self.accounts.token.clone(),
             self.accounts.mint_authority.clone(),
-            master_edition_account.clone(),
-
+            self.programs.rent.clone(),
         ];
 
         invoke(&instruction, &account_infos)?;
@@ -333,6 +344,8 @@ impl<'a> Minter<'a> {
                 self.freeze()?;
             }
         }
+        self.create_metadata_account()?;
+        self.create_master_edition()?;
         Ok(())
     }
 

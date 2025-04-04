@@ -3,6 +3,20 @@
 SOLANA_PROGRAMS=("hello_solana" "calculator" "transfer_sol" "tokens")
 CLONE_UPGRADEABLE_PROGRAMS=("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
 
+
+SELECTED_PROGRAM=$(echo "$@" | awk 'match($0, /--program[[:space:]]+([^[:space:]]+)/, a) {print a[1]}')
+
+contains() {
+    local match="$1"
+    shift
+    for item in "$@"; do
+        if [[ "$item" == "$match" ]]; then
+            return 0  
+        fi
+    done
+    return 1  
+}
+
 case $1 in
     "start")
         CMD="solana-test-validator"
@@ -33,7 +47,7 @@ case $1 in
         for x in $(solana program-v4 show | awk 'RP==0 {print $1}'); do 
             if [[ $x != "Program" ]]; 
             then 
-                solana program-v4 close $x;
+                solana program-v4 close --program-id $x;
             fi
         done
         cargo clean --manifest-path=./contracts/Cargo.toml
@@ -47,12 +61,24 @@ case $1 in
         cargo build-sbf --manifest-path=./contracts/Cargo.toml
         ;;
     "deploy")
-        cargo build-sbf --manifest-path=./contracts/Cargo.toml
-        for program in "${SOLANA_PROGRAMS[@]}"; do
-          deploy_output=$(solana program-v4 deploy --program-keypair ./contracts/target/deploy/$program-keypair.json ./contracts/target/deploy/$program.so)
+        if [[ -n "$SELECTED_PROGRAM" ]]; then
+          if ! contains "$SELECTED_PROGRAM" "${SOLANA_PROGRAMS[@]}"; then
+                echo "Error: Program '$SELECTED_PROGRAM' is not in the list of available programs."
+                echo "Available programs: ${SOLANA_PROGRAMS[*]}"
+                exit 1
+          fi
+          cargo build-sbf --manifest-path=./contracts/$SELECTED_PROGRAM/Cargo.toml
+          deploy_output=$(solana program-v4 deploy --program-keypair ./contracts/target/deploy/$SELECTED_PROGRAM-keypair.json ./contracts/target/deploy/$SELECTED_PROGRAM.so)
           program_id=$(echo "$deploy_output" | awk '/Program Id:/ {print $NF}')
-          echo "$program id: $program_id"
-        done
+          echo "$SELECTED_PROGRAM id: $program_id"
+        else
+          cargo build-sbf --manifest-path=./contracts/Cargo.toml
+          for program in "${SOLANA_PROGRAMS[@]}"; do
+            deploy_output=$(solana program-v4 deploy --program-keypair ./contracts/target/deploy/$program-keypair.json ./contracts/target/deploy/$program.so)
+            program_id=$(echo "$deploy_output" | awk '/Program Id:/ {print $NF}')
+            echo "$program id: $program_id"
+          done
+        fi
         solana program-v4 show
         ;;
     "reset-and-deploy")
