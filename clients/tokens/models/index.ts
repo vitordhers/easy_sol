@@ -16,6 +16,8 @@ export class FungibleTokenMetadata {
 }
 
 export class FungibleAssetMetadata {
+  // HEADS UP: order of similar type properties is of utmost importance!!!
+  // check index property of field decorator param for managing order accondingly, if needed!
   @field({ type: "string" })
   name: string;
   @field({ type: "string" })
