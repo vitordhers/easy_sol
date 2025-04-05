@@ -44,18 +44,18 @@ export class NonFungibleTokenMetadata {
   uri: string;
   @field({ type: "u16" })
   seller_fee_basis_points: number;
-  @field({ type: option(vec(Uint8Array)) })
-  creators_addresses?: Uint8Array[];
-  @field({ type: option(Uint8Array) })
-  collection_address?: Uint8Array;
+  @field({ type: option(vec("string")) })
+  creators_addresses?: string[];
+  @field({ type: option("string") })
+  collection_address?: string;
 
   constructor(
     name: string,
     symbol: string,
     uri: string,
     seller_fee_basis_points: number,
-    creators_addresses?: Uint8Array[],
-    collection_address?: Uint8Array,
+    creators_addresses?: string[],
+    collection_address?: string,
   ) {
     this.name = name;
     this.symbol = symbol;

@@ -40,7 +40,7 @@ export const run = async () => {
   const fungibleTokenMetadata = new FungibleTokenMetadata(
     "Jogo do Bicho Coin",
     "JBC",
-    "https://gateway.pinata.cloud/ipfs/bafkreiavttmvulnb2cagvpb4iwyeoeetohvq5bbqeqw4kvedbfb25wha5e",
+    "https://gateway.pinata.cloud/ipfs/bafkreicrswd7o45wtlkkvqijr7w7ksvugjjww5ylwopb32wqvs5cihp4lm",
   );
   const fungibleAssetMetadata = new FungibleAssetMetadata(
     "Food",
@@ -53,10 +53,11 @@ export const run = async () => {
     "Dts#001",
     "https://gateway.pinata.cloud/ipfs/bafkreiewvggcg23sci5jq3qqruhlcwmyunwd557ev2yuc4d65eyrvlzfre",
     500,
+    [wallet.publicKey.toString()],
   );
   const tokensData: TokenData[] = [
-    new FungibleTokenData(9, 1000000000n, true, fungibleTokenMetadata),
-    new FungibleAssetData(0, 1000n, fungibleAssetMetadata),
+    new FungibleTokenData(9, 1_000_000n, true, fungibleTokenMetadata),
+    new FungibleAssetData(0, 1_000n, fungibleAssetMetadata),
     new NonFungibleTokenData(nonFungibleTokenMetadata),
   ];
 
@@ -102,14 +103,12 @@ export const run = async () => {
     );
 
     console.log(
-      `Minting token with data ${Deno.inspect({ data: tokenData })} at ${
-        Deno.inspect(
-          {
-            mintAddress: mintKeypair.publicKey.toBase58(),
-            tokenAddress: tokenAddress,
-          },
-        )
-      } ...`,
+      `Minting token with data ${Deno.inspect({ data: tokenData })} at ${Deno.inspect(
+        {
+          mintAddress: mintKeypair.publicKey.toBase58(),
+          tokenAddress: tokenAddress,
+        },
+      )} ...`,
     );
 
     const metadataAccounts: AccountMeta[] = [

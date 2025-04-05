@@ -1,5 +1,4 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct FungibleTokenMetadata {
@@ -22,8 +21,8 @@ pub struct NonFungibleTokenMetadata {
     pub symbol: String,
     pub uri: String,
     pub seller_fee_basis_points: u16,
-    pub creators_addresses: Option<Vec<Pubkey>>,
-    pub collection_address: Option<Pubkey>,
+    pub creators_addresses: Option<Vec<String>>,
+    pub collection_address: Option<String>,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]

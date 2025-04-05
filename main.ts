@@ -1,20 +1,29 @@
+import { SendTransactionError } from "npm:@solana/web3.js";
 import { AvailableProgram } from "./shared/enums/index.ts";
+import { connect } from "./shared/functions/index.ts";
 import { run as runHelloSolana } from "./clients/hello_solana/index.ts";
 import { run as runCalculator } from "./clients/calculator/index.ts";
 import { run as runTransferSol } from "./clients/transfer_sol/index.ts";
 import { run as runTokens } from "./clients/tokens/index.ts";
-import { SendTransactionError } from "npm:@solana/web3.js";
-import { connect } from "./shared/functions/index.ts";
 
 const main = async () => {
   const args = Deno.args;
 
-  const programIndex = args.indexOf("--program");
-  if (programIndex) {
-    throw new Error(`Param --program must be passed!`);
-  }
+  let program: string | undefined;
 
-  const program = args[programIndex + 1];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg.startsWith("--program=")) {
+      program = arg.split("=")[1];
+      break;
+    }
+
+    if (arg === "--program") {
+      program = args[i + 1];
+      break;
+    }
+  }
   const availablePrograms = Object.values(AvailableProgram);
   if (!program) {
     throw new Error(

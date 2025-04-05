@@ -2,7 +2,6 @@ use {
     crate::data::*,
     borsh::{BorshDeserialize, BorshSerialize},
     mpl_token_metadata::{
-        ID as MPL_METADATA_ID,
         instructions::{
             CreateMasterEditionV3, CreateMasterEditionV3InstructionArgs, CreateMetadataAccountV3,
             CreateMetadataAccountV3InstructionArgs,
@@ -14,13 +13,14 @@ use {
         msg,
         program::invoke,
         program_error::ProgramError,
+        pubkey::Pubkey,
         rent::Rent,
         system_instruction::create_account,
         sysvar::Sysvar,
     },
     spl_associated_token_account::instruction::create_associated_token_account,
     spl_token::instruction::{freeze_account, initialize_mint, mint_to},
-    std::slice::Iter,
+    std::{slice::Iter, str::FromStr},
 };
 
 pub struct MinterAccounts<'a> {
@@ -36,7 +36,7 @@ pub struct MinterPrograms<'a> {
     system: &'a AccountInfo<'a>,
     token: &'a AccountInfo<'a>,
     associated_token: &'a AccountInfo<'a>,
-    metadata: &'a AccountInfo<'a>,
+    _metadata: &'a AccountInfo<'a>,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
@@ -83,7 +83,7 @@ impl<'a> MinterPrograms<'a> {
             system,
             token,
             associated_token,
-            metadata,
+            _metadata: metadata,
         })
     }
 }
@@ -169,7 +169,7 @@ impl<'a> Minter<'a> {
     fn mint(&self) -> Result<(), ProgramError> {
         msg!("Minting token to token account...");
         let amount = match &self.data {
-            TokenData::Fungible(data) => data.initial_supply,
+            TokenData::Fungible(data) => data.initial_supply * 10_u64.pow(data.decimals as u32),
             TokenData::FungibleAsset(data) => data.quantity,
             TokenData::NonFungible(_) => 1,
         };
@@ -231,17 +231,20 @@ impl<'a> Minter<'a> {
                     addresses
                         .iter()
                         .map(|addr| Creator {
-                            share: 0,
-                            address: *addr,
+                            share: 100 / addresses.len() as u8,
+                            address: Pubkey::from_str(addr)
+                                .expect("address to be convertable to pubkey"),
                             verified: false,
                         })
                         .collect()
                 }),
                 collection: metadata
                     .collection_address
+                    .clone()
                     .map(|collection_addr| Collection {
                         verified: false,
-                        key: collection_addr,
+                        key: Pubkey::from_str(collection_addr.as_str())
+                            .expect("collection address to be convertable to pubkey"),
                     }),
                 seller_fee_basis_points: metadata.seller_fee_basis_points,
             },
