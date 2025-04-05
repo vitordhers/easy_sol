@@ -1,0 +1,10 @@
+{
+  "name": "Jogo do Bicho Coin",
+  "symbol": "JBC",
+  "description": "A fungible token for transactions over the Jogo do Bicho on the Solana Network.",
+  "image": "https://gateway.pinata.cloud/ipfs/bafybeiadhe373f7ngtuqojjbmg66pygrxbnvpcs6usnlkyzhqbzkcq5ruq",
+  "decimals": 9,
+  "properties": {
+    "category": "fungible"
+  }
+}

@@ -1,24 +1,34 @@
 use {
     crate::data::*,
     borsh::{BorshDeserialize, BorshSerialize},
+    mpl_token_metadata::{
+        instructions::{
+            CreateMasterEditionV3, CreateMasterEditionV3InstructionArgs, CreateMetadataAccountV3,
+            CreateMetadataAccountV3InstructionArgs,
+        },
+        types::{Collection, Creator, DataV2, UseMethod, Uses},
+    },
     solana_program::{
         account_info::{AccountInfo, next_account_info},
         msg,
         program::invoke,
         program_error::ProgramError,
+        pubkey::Pubkey,
         rent::Rent,
         system_instruction::create_account,
         sysvar::Sysvar,
     },
     spl_associated_token_account::instruction::create_associated_token_account,
     spl_token::instruction::{freeze_account, initialize_mint, mint_to},
-    std::slice::Iter,
+    std::{slice::Iter, str::FromStr},
 };
 
 pub struct MinterAccounts<'a> {
     mint: &'a AccountInfo<'a>,
     token: &'a AccountInfo<'a>,
     mint_authority: &'a AccountInfo<'a>,
+    metadata: &'a AccountInfo<'a>,
+    master_edition: Option<&'a AccountInfo<'a>>,
 }
 
 pub struct MinterPrograms<'a> {
@@ -26,6 +36,7 @@ pub struct MinterPrograms<'a> {
     system: &'a AccountInfo<'a>,
     token: &'a AccountInfo<'a>,
     associated_token: &'a AccountInfo<'a>,
+    _metadata: &'a AccountInfo<'a>,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
@@ -40,10 +51,21 @@ impl<'a> MinterAccounts<'a> {
         let mint = next_account_info(iter)?;
         let token = next_account_info(iter)?;
         let mint_authority = next_account_info(iter)?;
+        let metadata = next_account_info(iter)?;
+        let mut master_edition = None;
+        if iter.len() > 5 {
+            master_edition = match next_account_info(iter) {
+                Ok(account) => Some(account),
+                Err(_) => None,
+            };
+        }
+
         Ok(Self {
             mint,
             token,
             mint_authority,
+            metadata,
+            master_edition,
         })
     }
 }
@@ -54,12 +76,14 @@ impl<'a> MinterPrograms<'a> {
         let system = next_account_info(iter)?;
         let token = next_account_info(iter)?;
         let associated_token = next_account_info(iter)?;
+        let metadata = next_account_info(iter)?;
 
         Ok(Self {
             rent,
             system,
             token,
             associated_token,
+            _metadata: metadata,
         })
     }
 }
@@ -145,7 +169,7 @@ impl<'a> Minter<'a> {
     fn mint(&self) -> Result<(), ProgramError> {
         msg!("Minting token to token account...");
         let amount = match &self.data {
-            TokenData::Fungible(data) => data.initial_supply,
+            TokenData::Fungible(data) => data.initial_supply * 10_u64.pow(data.decimals as u32),
             TokenData::FungibleAsset(data) => data.quantity,
             TokenData::NonFungible(_) => 1,
         };
@@ -167,6 +191,125 @@ impl<'a> Minter<'a> {
         ];
         invoke(&instruction, &account_infos)?;
         msg!("Token minted successfully!");
+        Ok(())
+    }
+
+    fn create_metadata_account(&self) -> Result<(), ProgramError> {
+        let data = match &self.data {
+            TokenData::Fungible(FungibleTokenParams { metadata, .. }) => DataV2 {
+                name: metadata.name.clone(),
+                uri: metadata.uri.clone(),
+                symbol: metadata.symbol.clone(),
+                uses: None,
+                creators: None,
+                collection: None,
+                seller_fee_basis_points: 0,
+            },
+            TokenData::FungibleAsset(FungibleAssetParams { metadata, .. }) => DataV2 {
+                name: metadata.name.clone(),
+                uri: metadata.uri.clone(),
+                symbol: metadata.symbol.clone(),
+                uses: if metadata.uses > 0 {
+                    Some(Uses {
+                        total: metadata.uses,
+                        remaining: metadata.uses,
+                        use_method: UseMethod::Burn,
+                    })
+                } else {
+                    None
+                },
+                creators: None,
+                collection: None,
+                seller_fee_basis_points: 0,
+            },
+            TokenData::NonFungible(NonFungibleTokenParams { metadata, .. }) => DataV2 {
+                name: metadata.name.clone(),
+                uri: metadata.uri.clone(),
+                symbol: metadata.symbol.clone(),
+                uses: None,
+                creators: metadata.creators_addresses.clone().map(|addresses| {
+                    addresses
+                        .iter()
+                        .map(|addr| Creator {
+                            share: 100 / addresses.len() as u8,
+                            address: Pubkey::from_str(addr)
+                                .expect("address to be convertable to pubkey"),
+                            verified: false,
+                        })
+                        .collect()
+                }),
+                collection: metadata
+                    .collection_address
+                    .clone()
+                    .map(|collection_addr| Collection {
+                        verified: false,
+                        key: Pubkey::from_str(collection_addr.as_str())
+                            .expect("collection address to be convertable to pubkey"),
+                    }),
+                seller_fee_basis_points: metadata.seller_fee_basis_points,
+            },
+        };
+        let args = CreateMetadataAccountV3InstructionArgs {
+            data,
+            is_mutable: false,
+            collection_details: None,
+        };
+        let factory = CreateMetadataAccountV3 {
+            metadata: *self.accounts.metadata.key,
+            mint: *self.accounts.mint.key,
+            payer: *self.accounts.mint_authority.key,
+            update_authority: (*self.accounts.mint_authority.key, true),
+            mint_authority: *self.accounts.mint_authority.key,
+            system_program: *self.programs.system.key,
+            rent: Some(*self.programs.rent.key),
+        };
+
+        let instruction = factory.instruction(args);
+        let account_infos = [
+            self.accounts.metadata.clone(),
+            self.accounts.mint.clone(),
+            self.accounts.token.clone(),
+            self.accounts.mint_authority.clone(),
+            self.programs.rent.clone(),
+        ];
+        invoke(&instruction, &account_infos)?;
+        msg!("Metadata account created successfully!");
+        Ok(())
+    }
+
+    fn create_master_edition(&self) -> Result<(), ProgramError> {
+        match self.data {
+            TokenData::NonFungible(_) => {}
+            _ => return Ok(()),
+        }
+        let args = CreateMasterEditionV3InstructionArgs {
+            max_supply: Some(1),
+        };
+        let master_edition_account = self.accounts.master_edition.unwrap();
+        let factory = CreateMasterEditionV3 {
+            edition: *master_edition_account.key,
+            metadata: *self.accounts.metadata.key,
+            mint: *self.accounts.mint.key,
+            mint_authority: *self.accounts.mint_authority.key,
+            payer: *self.accounts.mint_authority.key,
+            update_authority: *self.accounts.mint_authority.key,
+            token_program: *self.programs.token.key,
+            system_program: *self.programs.system.key,
+            rent: Some(*self.programs.rent.key),
+        };
+
+        let instruction = factory.instruction(args);
+        let account_infos = [
+            master_edition_account.clone(),
+            self.accounts.metadata.clone(),
+            self.accounts.mint.clone(),
+            self.accounts.token.clone(),
+            self.accounts.mint_authority.clone(),
+            self.programs.rent.clone(),
+        ];
+
+        invoke(&instruction, &account_infos)?;
+
         Ok(())
     }
 
@@ -204,6 +347,8 @@ impl<'a> Minter<'a> {
                 self.freeze()?;
             }
         }
+        self.create_metadata_account()?;
+        self.create_master_edition()?;
         Ok(())
     }
 

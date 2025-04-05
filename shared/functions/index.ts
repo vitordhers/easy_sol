@@ -19,7 +19,7 @@ import {
   PROGRAMS_PATH,
   WALLETS_PATH,
 } from "../constants/index.ts";
-import { CliConfig } from "../interfaces/index.ts";
+import { CliConfig, PDA } from "../interfaces/index.ts";
 
 export const { inspect, readFile } = Deno;
 
@@ -114,6 +114,14 @@ export const getLocalAccount = async (connectionForAirdrop?: Connection) => {
   return localKeypair;
 };
 
+export const findProgramAddress = (
+  seeds: Array<Buffer | Uint8Array>,
+  programId: PublicKey,
+) => {
+  const [pda, bump] = PublicKey.findProgramAddressSync(seeds, programId);
+  return { pda, bump } as PDA;
+};
+
 export const loadProgram = async (programName: AvailableProgram) => {
   const programKeypairPath = join(PROGRAMS_PATH, `${programName}-keypair.json`);
   const programKeypair = await createKeypairFromFile(programKeypairPath);
@@ -170,22 +178,13 @@ export const configureClientAccount = async (
     localKeypair,
   ]);
   console.log(`Client account created successfully.`, result);
-  clientAccount =
-    (await connection.getAccountInfo(clientPublicKey)) || undefined;
+  clientAccount = (await connection.getAccountInfo(clientPublicKey)) ||
+    undefined;
   if (!clientAccount) {
     throw new Error(`Client account is missing`);
   }
   return { account: clientAccount, publicKey: clientPublicKey };
 };
-
-//  fields: Layout<T[keyof T]>[],
-//  payload: T,
-//) => {
-//  const layout = struct(fields);
-//  const buffer = Buffer.alloc(layout.span);
-//  layout.encode(payload, buffer);
-//  return buffer;
-//};
 
 export const runProgram = async (
   connection: Connection,

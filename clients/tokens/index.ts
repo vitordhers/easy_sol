@@ -1,6 +1,7 @@
 import {
   AccountMeta,
   Keypair,
+  PublicKey,
   sendAndConfirmTransaction,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
@@ -15,56 +16,85 @@ import {
 import { AvailableProgram } from "../../shared/enums/index.ts";
 import {
   connect,
+  findProgramAddress,
   getLocalAccount,
   loadProgram,
 } from "../../shared/functions/index.ts";
 import {
   FungibleAssetData,
+  FungibleAssetMetadata,
   FungibleTokenData,
+  FungibleTokenMetadata,
   NonFungibleTokenData,
+  NonFungibleTokenMetadata,
   TokenData,
 } from "./models/index.ts";
 import { SerializationHelper } from "../../shared/models.ts";
-
+import { Buffer } from "node:buffer";
+import { TOKEN_METADATA_PROGRAM_ID } from "../../shared/constants/index.ts";
 export const run = async () => {
   const connection = connect();
 
   const wallet = await getLocalAccount();
   const programKeypair = await loadProgram(AvailableProgram.Tokens);
-
+  const fungibleTokenMetadata = new FungibleTokenMetadata(
+    "Jogo do Bicho Coin",
+    "JBC",
+    "https://gateway.pinata.cloud/ipfs/bafkreicrswd7o45wtlkkvqijr7w7ksvugjjww5ylwopb32wqvs5cihp4lm",
+  );
+  const fungibleAssetMetadata = new FungibleAssetMetadata(
+    "Food",
+    "Food",
+    "https://gateway.pinata.cloud/ipfs/bafkreicrtnhb7ec6b2glosuclyqm3yvlhonqhvew763vl7mo5ktd3m7erq",
+    1000n,
+  );
+  const nonFungibleTokenMetadata = new NonFungibleTokenMetadata(
+    "Ferris, the Memory Guardian",
+    "Dts#001",
+    "https://gateway.pinata.cloud/ipfs/bafkreiewvggcg23sci5jq3qqruhlcwmyunwd557ev2yuc4d65eyrvlzfre",
+    500,
+    [wallet.publicKey.toString()],
+  );
   const tokensData: TokenData[] = [
-    new FungibleTokenData(9, 1000000000n, true),
-    new FungibleTokenData(9, 1000000000n, false),
-    new FungibleAssetData(0, 1000n),
-    new NonFungibleTokenData(),
+    new FungibleTokenData(9, 1_000_000n, true, fungibleTokenMetadata),
+    new FungibleAssetData(0, 1_000n, fungibleAssetMetadata),
+    new NonFungibleTokenData(nonFungibleTokenMetadata),
   ];
-  const baseAccountsInfos = [
+
+  const metadataProgramPublicKey = new PublicKey(TOKEN_METADATA_PROGRAM_ID);
+  const baseProgramsAccountInfos = [
     {
-      pubkey: wallet.publicKey,
-      isSigner: true,
-      isWritable: false,
-    }, // Rent account
-    {
+      // Rent account
       pubkey: SYSVAR_RENT_PUBKEY,
       isSigner: false,
       isWritable: false,
-    }, // System program
+    },
     {
+      // System program
       pubkey: SystemProgram.programId,
       isSigner: false,
       isWritable: false,
     },
     {
+      // Token program
       pubkey: TOKEN_PROGRAM_ID,
       isSigner: false,
       isWritable: false,
-    }, // Associated token program
+    },
     {
+      // Associated token program
       pubkey: ASSOCIATED_TOKEN_PROGRAM_ID,
       isSigner: false,
       isWritable: false,
     },
+    {
+      // Metadata program
+      pubkey: metadataProgramPublicKey,
+      isSigner: false,
+      isWritable: false,
+    },
   ];
+
   for (const tokenData of tokensData) {
     const mintKeypair = Keypair.generate();
     const tokenAddress = await getAssociatedTokenAddress(
@@ -80,6 +110,39 @@ export const run = async () => {
         },
       )} ...`,
     );
+
+    const metadataAccounts: AccountMeta[] = [
+      {
+        pubkey: findProgramAddress(
+          [
+            Buffer.from("metadata"),
+            TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+            mintKeypair.publicKey.toBuffer(),
+          ],
+          TOKEN_METADATA_PROGRAM_ID,
+        ).pda,
+        isSigner: false,
+        isWritable: true,
+      },
+    ];
+
+    if (tokenData instanceof NonFungibleTokenData) {
+      const masterEditionAccountData: AccountMeta = {
+        pubkey: findProgramAddress(
+          [
+            Buffer.from("metadata"),
+            TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+            mintKeypair.publicKey.toBuffer(),
+            Buffer.from("edition"),
+          ],
+          TOKEN_METADATA_PROGRAM_ID,
+        ).pda,
+        isSigner: false,
+        isWritable: true,
+      };
+      metadataAccounts.push(masterEditionAccountData);
+    }
+
     const accountsMeta: AccountMeta[] = [
       {
         pubkey: mintKeypair.publicKey,
@@ -87,7 +150,14 @@ export const run = async () => {
         isWritable: true,
       },
       { pubkey: tokenAddress, isSigner: false, isWritable: true },
-      ...baseAccountsInfos,
+      {
+        // Mint authority
+        pubkey: wallet.publicKey,
+        isSigner: true,
+        isWritable: false,
+      },
+      ...metadataAccounts,
+      ...baseProgramsAccountInfos,
     ];
     const serializedIxData = SerializationHelper.serialize(tokenData);
     const ix = new TransactionInstruction({

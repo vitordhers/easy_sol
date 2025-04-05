@@ -1,11 +1,7 @@
 use {
     borsh::BorshDeserialize,
     solana_program::{
-        account_info::{AccountInfo, next_account_info},
-        entrypoint,
-        entrypoint::ProgramResult,
-        msg,
-        pubkey::Pubkey,
+        account_info::AccountInfo, entrypoint, entrypoint::ProgramResult, msg, pubkey::Pubkey,
     },
 };
 
@@ -21,8 +17,11 @@ fn process_instruction<'a>(
     accounts: &'a [AccountInfo<'a>],
     instructions_data: &[u8],
 ) -> ProgramResult {
+    msg!("minting...1");
     let data = TokenData::try_from_slice(instructions_data)?;
+    msg!("minting...2");
     let minter = Minter::try_new(accounts, data)?;
+    msg!("minting...3");
     minter.run()?;
     msg!("Token mint process completed successfully.");
     Ok(())

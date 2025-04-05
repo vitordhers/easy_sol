@@ -1,0 +1,34 @@
+{
+  "name": "Ferris, the Memory Guardian",
+  "symbol": "Deities #001",
+  "description": "Artwork of Ferris, Memory Guardian",
+  "image": "https://gateway.pinata.cloud/ipfs/bafkreicw46tn75x7vyicm6sblvdkev3rp4vubxc5xqakwgbevrx4wsj2pa",
+  "external_url": "https://github.com/dinaiscoding",
+  "attributes": [
+    { "trait_type": "Weapon", "value": "Holy Keys of Borrow Checking + 8" },
+    { "trait_type": "Shield", "value": "Holy Mitre of Memory Safety +6" },
+    {
+      "trait_type": "Armor",
+      "value": "Copper Dragon Armor of Fearless Concurrency"
+    },
+    { "trait_type": "Main_Attack", "value": "Turn Gopher" },
+    { "trait_type": "Side_Attack", "value": "GC Banishment" },
+    { "trait_type": "Alignment", "value": "Lawful Good" }
+  ],
+  "seller_fee_basis_points": 500,
+  "creators": [
+    {
+      "address": "FRPQtZ97wSqDaZZGr4JysE6gLZzT53Cx4QZX8Hdkt6A5",
+      "share": 100
+    }
+  ],
+  "properties": {
+    "category": "nft",
+    "files": [
+      {
+        "uri": "https://gateway.pinata.cloud/ipfs/bafkreicw46tn75x7vyicm6sblvdkev3rp4vubxc5xqakwgbevrx4wsj2pa",
+        "type": "image/png"
+      }
+    ]
+  }
+}
