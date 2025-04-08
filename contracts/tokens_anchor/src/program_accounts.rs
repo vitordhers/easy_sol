@@ -17,7 +17,6 @@ pub struct MintFungible<'a> {
     /// Check: this will be created on-chain
     #[account(mut)]
     pub metadata: UncheckedAccount<'a>,
-    /// Check: this will be created on-chain
     pub rent: Sysvar<'a, Rent>,
     pub system_program: Program<'a, System>,
     pub token_program: Program<'a, Token>,
