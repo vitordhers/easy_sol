@@ -5,9 +5,9 @@ use crate::{
 
 pub enum Minter<'a> {
     FungibleToken {
-        accounts: &'a FungibleAccounts<'a>,
+        accounts: FungibleAccounts<'a>,
         metadata: &'a FungibleTokenMetadata,
-        programs: &'a Programs<'a>,
+        programs: Programs<'a>,
     },
     FungibleAsset {
         accounts: FungibleAccounts<'a>,
