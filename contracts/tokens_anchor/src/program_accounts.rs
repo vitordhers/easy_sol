@@ -27,10 +27,10 @@ pub struct MintFungible<'a> {
 #[derive(Accounts)]
 pub struct MintNonFungible<'a> {
     #[account(mut)]
-    mint: Signer<'a>,
+    pub mint: Signer<'a>,
     #[account(mut)]
     /// Check: this will be created on-chain
-    token: UncheckedAccount<'a>,
+    pub token: UncheckedAccount<'a>,
     #[account(mut)]
     pub mint_authority: Signer<'a>,
     /// Check: this will be created on-chain
@@ -46,7 +46,39 @@ pub struct MintNonFungible<'a> {
     pub metadata_program: Program<'a, Metadata>,
 }
 
-pub struct Programs<'a> {
+pub struct MinterAccounts<'a> {
+    pub mint: &'a Signer<'a>,
+    pub token: &'a UncheckedAccount<'a>,
+    pub mint_authority: &'a Signer<'a>,
+    pub metadata: &'a UncheckedAccount<'a>,
+    pub master_edition: Option<&'a UncheckedAccount<'a>>,
+}
+
+impl<'a> From<&'a MintNonFungible<'a>> for MinterAccounts<'a> {
+    fn from(value: &'a MintNonFungible<'a>) -> Self {
+        Self {
+            mint: &value.mint,
+            token: &value.token,
+            mint_authority: &value.mint_authority,
+            metadata: &value.metadata,
+            master_edition: Some(&value.master_edition),
+        }
+    }
+}
+
+impl<'a> From<&'a MintFungible<'a>> for MinterAccounts<'a> {
+    fn from(value: &'a MintFungible<'a>) -> Self {
+        Self {
+            mint: &value.mint,
+            token: &value.token,
+            mint_authority: &value.mint_authority,
+            metadata: &value.metadata,
+            master_edition: None,
+        }
+    }
+}
+
+pub struct MinterPrograms<'a> {
     pub rent: &'a Sysvar<'a, Rent>,
     pub system: &'a Program<'a, System>,
     pub token: &'a Program<'a, Token>,
@@ -54,19 +86,7 @@ pub struct Programs<'a> {
     pub metadata: &'a Program<'a, Metadata>,
 }
 
-impl<'a> From<&'a MintNonFungible<'a>> for Programs<'a> {
-    fn from(value: &'a MintNonFungible<'a>) -> Self {
-        Self {
-            rent: &value.rent,
-            system: &value.system_program,
-            token: &value.token_program,
-            associated_token: &value.associated_token_program,
-            metadata: &value.metadata_program,
-        }
-    }
-}
-
-impl<'a> From<&'a MintFungible<'a>> for Programs<'a> {
+impl<'a> From<&'a MintFungible<'a>> for MinterPrograms<'a> {
     fn from(value: &'a MintFungible<'a>) -> Self {
         Self {
             rent: &value.rent,
@@ -78,40 +98,14 @@ impl<'a> From<&'a MintFungible<'a>> for Programs<'a> {
     }
 }
 
-pub struct FungibleAccounts<'a> {
-    pub mint: &'a Signer<'a>,
-    pub token: &'a UncheckedAccount<'a>,
-    pub mint_authority: &'a Signer<'a>,
-    pub metadata: &'a UncheckedAccount<'a>,
-}
-
-impl<'a> From<&'a MintFungible<'a>> for FungibleAccounts<'a> {
-    fn from(value: &'a MintFungible<'a>) -> Self {
-        Self {
-            mint: &value.mint,
-            token: &value.token,
-            mint_authority: &value.mint_authority,
-            metadata: &value.metadata,
-        }
-    }
-}
-
-pub struct NonFungibleAccounts<'a> {
-    pub mint: &'a Signer<'a>,
-    pub token: &'a UncheckedAccount<'a>,
-    pub mint_authority: &'a Signer<'a>,
-    pub metadata: &'a UncheckedAccount<'a>,
-    pub master_edition: &'a UncheckedAccount<'a>,
-}
-
-impl<'a> From<&'a MintNonFungible<'a>> for NonFungibleAccounts<'a> {
+impl<'a> From<&'a MintNonFungible<'a>> for MinterPrograms<'a> {
     fn from(value: &'a MintNonFungible<'a>) -> Self {
         Self {
-            mint: &value.mint,
-            token: &value.token,
-            mint_authority: &value.mint_authority,
-            metadata: &value.metadata,
-            master_edition: &value.master_edition,
+            rent: &value.rent,
+            system: &value.system_program,
+            token: &value.token_program,
+            associated_token: &value.associated_token_program,
+            metadata: &value.metadata_program,
         }
     }
 }
