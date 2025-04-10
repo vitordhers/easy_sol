@@ -14,7 +14,7 @@ pub mod tokens_anchor {
     use super::*;
 
     pub fn mint_nft(ctx: Context<MintNonFungible>, data: TokenData) -> Result<()> {
-        let accounts: &MintNonFungible = &ctx.accounts;
+        let accounts = ctx.accounts.clone();
         let minter = Minter::from(accounts);
         minter.run(&data)?;
         Ok(())

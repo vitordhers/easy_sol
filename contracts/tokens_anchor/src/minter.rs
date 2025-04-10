@@ -14,23 +14,23 @@ use anchor_spl::{
 use mpl_token_metadata::types::DataV2;
 
 pub struct Minter<'a> {
-    accounts: &'a MinterAccounts<'a>,
-    programs: &'a MinterPrograms<'a>,
+    accounts: MinterAccounts<'a>,
+    programs: MinterPrograms<'a>,
 }
 
 impl<'a> From<MintFungible<'a>> for Minter<'a> {
     fn from(value: MintFungible<'a>) -> Self {
         Self {
-            accounts: &value.into(),
-            programs: &value.into(),
+            accounts: value.clone().into(),
+            programs: value.into(),
         }
     }
 }
 
-impl<'a> From<&'a MintNonFungible<'a>> for Minter<'a> {
-    fn from(value: &'a MintNonFungible<'a>) -> Self {
+impl<'a> From<MintNonFungible<'a>> for Minter<'a> {
+    fn from(value: MintNonFungible<'a>) -> Self {
         Self {
-            accounts: value.into(),
+            accounts: value.clone().into(),
             programs: value.into(),
         }
     }
@@ -151,6 +151,7 @@ impl Minter<'_> {
             edition: self
                 .accounts
                 .master_edition
+                .clone()
                 .expect("master edition account to be provided when creating master edition")
                 .to_account_info(),
             token_program: self.programs.token.to_account_info(),

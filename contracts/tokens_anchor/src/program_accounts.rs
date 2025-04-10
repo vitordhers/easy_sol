@@ -5,107 +5,107 @@ use anchor_spl::{
     token::Token,
 };
 
-#[derive(Accounts)]
-pub struct MintFungible<'a> {
+#[derive(Accounts, Clone)]
+pub struct MintFungible<'info> {
     #[account(mut)]
-    pub mint: Signer<'a>,
+    pub mint: Signer<'info>,
     #[account(mut)]
     /// Check: this will be created on-chain
-    pub token: UncheckedAccount<'a>,
+    pub token: UncheckedAccount<'info>,
     #[account(mut)]
-    pub mint_authority: Signer<'a>,
+    pub mint_authority: Signer<'info>,
     /// Check: this will be created on-chain
     #[account(mut)]
-    pub metadata: UncheckedAccount<'a>,
-    pub rent: Sysvar<'a, Rent>,
-    pub system_program: Program<'a, System>,
-    pub token_program: Program<'a, Token>,
-    pub associated_token_program: Program<'a, AssociatedToken>,
-    pub metadata_program: Program<'a, Metadata>,
+    pub metadata: UncheckedAccount<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub metadata_program: Program<'info, Metadata>,
 }
 
-#[derive(Accounts)]
-pub struct MintNonFungible<'a> {
+#[derive(Accounts, Clone)]
+pub struct MintNonFungible<'info> {
     #[account(mut)]
-    pub mint: Signer<'a>,
+    pub mint: Signer<'info>,
     #[account(mut)]
     /// Check: this will be created on-chain
-    pub token: UncheckedAccount<'a>,
+    pub token: UncheckedAccount<'info>,
     #[account(mut)]
-    pub mint_authority: Signer<'a>,
+    pub mint_authority: Signer<'info>,
     /// Check: this will be created on-chain
     #[account(mut)]
-    pub metadata: UncheckedAccount<'a>,
+    pub metadata: UncheckedAccount<'info>,
     /// Check: this will be created on-chain
     #[account(mut)]
-    pub master_edition: UncheckedAccount<'a>,
-    pub rent: Sysvar<'a, Rent>,
-    pub system_program: Program<'a, System>,
-    pub token_program: Program<'a, Token>,
-    pub associated_token_program: Program<'a, AssociatedToken>,
-    pub metadata_program: Program<'a, Metadata>,
+    pub master_edition: UncheckedAccount<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: Program<'info, System>,
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub metadata_program: Program<'info, Metadata>,
 }
 
-pub struct MinterAccounts<'a> {
-    pub mint: &'a Signer<'a>,
-    pub token: &'a UncheckedAccount<'a>,
-    pub mint_authority: &'a Signer<'a>,
-    pub metadata: &'a UncheckedAccount<'a>,
-    pub master_edition: Option<&'a UncheckedAccount<'a>>,
+pub struct MinterAccounts<'info> {
+    pub mint: Signer<'info>,
+    pub token: UncheckedAccount<'info>,
+    pub mint_authority: Signer<'info>,
+    pub metadata: UncheckedAccount<'info>,
+    pub master_edition: Option<UncheckedAccount<'info>>,
 }
 
-impl<'a> From<&'a MintNonFungible<'a>> for MinterAccounts<'a> {
-    fn from(value: &'a MintNonFungible<'a>) -> Self {
+impl<'info> From<MintNonFungible<'info>> for MinterAccounts<'info> {
+    fn from(value: MintNonFungible<'info>) -> Self {
         Self {
-            mint: &value.mint,
-            token: &value.token,
-            mint_authority: &value.mint_authority,
-            metadata: &value.metadata,
-            master_edition: Some(&value.master_edition),
+            mint: value.mint,
+            token: value.token,
+            mint_authority: value.mint_authority,
+            metadata: value.metadata,
+            master_edition: Some(value.master_edition),
         }
     }
 }
 
-impl<'a> From<&'a MintFungible<'a>> for MinterAccounts<'a> {
-    fn from(value: &'a MintFungible<'a>) -> Self {
+impl<'info> From<MintFungible<'info>> for MinterAccounts<'info> {
+    fn from(value: MintFungible<'info>) -> Self {
         Self {
-            mint: &value.mint,
-            token: &value.token,
-            mint_authority: &value.mint_authority,
-            metadata: &value.metadata,
+            mint: value.mint,
+            token: value.token,
+            mint_authority: value.mint_authority,
+            metadata: value.metadata,
             master_edition: None,
         }
     }
 }
 
-pub struct MinterPrograms<'a> {
-    pub rent: &'a Sysvar<'a, Rent>,
-    pub system: &'a Program<'a, System>,
-    pub token: &'a Program<'a, Token>,
-    pub associated_token: &'a Program<'a, AssociatedToken>,
-    pub metadata: &'a Program<'a, Metadata>,
+pub struct MinterPrograms<'info> {
+    pub rent: Sysvar<'info, Rent>,
+    pub system: Program<'info, System>,
+    pub token: Program<'info, Token>,
+    pub associated_token: Program<'info, AssociatedToken>,
+    pub metadata: Program<'info, Metadata>,
 }
 
-impl<'a> From<&'a MintFungible<'a>> for MinterPrograms<'a> {
-    fn from(value: &'a MintFungible<'a>) -> Self {
+impl<'info> From<MintFungible<'info>> for MinterPrograms<'info> {
+    fn from(value: MintFungible<'info>) -> Self {
         Self {
-            rent: &value.rent,
-            system: &value.system_program,
-            token: &value.token_program,
-            associated_token: &value.associated_token_program,
-            metadata: &value.metadata_program,
+            rent: value.rent,
+            system: value.system_program,
+            token: value.token_program,
+            associated_token: value.associated_token_program,
+            metadata: value.metadata_program,
         }
     }
 }
 
-impl<'a> From<&'a MintNonFungible<'a>> for MinterPrograms<'a> {
-    fn from(value: &'a MintNonFungible<'a>) -> Self {
+impl<'info> From<MintNonFungible<'info>> for MinterPrograms<'info> {
+    fn from(value: MintNonFungible<'info>) -> Self {
         Self {
-            rent: &value.rent,
-            system: &value.system_program,
-            token: &value.token_program,
-            associated_token: &value.associated_token_program,
-            metadata: &value.metadata_program,
+            rent: value.rent,
+            system: value.system_program,
+            token: value.token_program,
+            associated_token: value.associated_token_program,
+            metadata: value.metadata_program,
         }
     }
 }
