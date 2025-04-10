@@ -5,7 +5,7 @@ use anchor_spl::{
     token::Token,
 };
 
-#[derive(Accounts, Clone)]
+#[derive(Accounts)]
 pub struct MintFungible<'info> {
     #[account(mut)]
     pub mint: Signer<'info>,
@@ -24,7 +24,7 @@ pub struct MintFungible<'info> {
     pub metadata_program: Program<'info, Metadata>,
 }
 
-#[derive(Accounts, Clone)]
+#[derive(Accounts)]
 pub struct MintNonFungible<'info> {
     #[account(mut)]
     pub mint: Signer<'info>,
@@ -46,66 +46,66 @@ pub struct MintNonFungible<'info> {
     pub metadata_program: Program<'info, Metadata>,
 }
 
-pub struct MinterAccounts<'info> {
-    pub mint: Signer<'info>,
-    pub token: UncheckedAccount<'info>,
-    pub mint_authority: Signer<'info>,
-    pub metadata: UncheckedAccount<'info>,
-    pub master_edition: Option<UncheckedAccount<'info>>,
+pub struct MinterAccounts<'a, 'b> {
+    pub mint: &'b Signer<'a>,
+    pub token: &'b UncheckedAccount<'a>,
+    pub mint_authority: &'b Signer<'a>,
+    pub metadata: &'b UncheckedAccount<'a>,
+    pub master_edition: Option<&'b UncheckedAccount<'a>>,
 }
 
-impl<'info> From<MintNonFungible<'info>> for MinterAccounts<'info> {
-    fn from(value: MintNonFungible<'info>) -> Self {
+impl<'a, 'b> From<&'b MintNonFungible<'a>> for MinterAccounts<'a, 'b> {
+    fn from(value: &'b MintNonFungible<'a>) -> Self {
         Self {
-            mint: value.mint,
-            token: value.token,
-            mint_authority: value.mint_authority,
-            metadata: value.metadata,
-            master_edition: Some(value.master_edition),
+            mint: &value.mint,
+            token: &value.token,
+            mint_authority: &value.mint_authority,
+            metadata: &value.metadata,
+            master_edition: Some(&value.master_edition),
         }
     }
 }
 
-impl<'info> From<MintFungible<'info>> for MinterAccounts<'info> {
-    fn from(value: MintFungible<'info>) -> Self {
+impl<'a, 'b> From<&'b MintFungible<'a>> for MinterAccounts<'a, 'b> {
+    fn from(value: &'b MintFungible<'a>) -> Self {
         Self {
-            mint: value.mint,
-            token: value.token,
-            mint_authority: value.mint_authority,
-            metadata: value.metadata,
+            mint: &value.mint,
+            token: &value.token,
+            mint_authority: &value.mint_authority,
+            metadata: &value.metadata,
             master_edition: None,
         }
     }
 }
 
-pub struct MinterPrograms<'info> {
-    pub rent: Sysvar<'info, Rent>,
-    pub system: Program<'info, System>,
-    pub token: Program<'info, Token>,
-    pub associated_token: Program<'info, AssociatedToken>,
-    pub metadata: Program<'info, Metadata>,
+pub struct MinterPrograms<'a, 'b> {
+    pub rent: &'b Sysvar<'a, Rent>,
+    pub system: &'b Program<'a, System>,
+    pub token: &'b Program<'a, Token>,
+    pub associated_token: &'b Program<'a, AssociatedToken>,
+    pub metadata: &'b Program<'a, Metadata>,
 }
 
-impl<'info> From<MintFungible<'info>> for MinterPrograms<'info> {
-    fn from(value: MintFungible<'info>) -> Self {
+impl<'a, 'b> From<&'b MintFungible<'a>> for MinterPrograms<'a, 'b> {
+    fn from(value: &'b MintFungible<'a>) -> Self {
         Self {
-            rent: value.rent,
-            system: value.system_program,
-            token: value.token_program,
-            associated_token: value.associated_token_program,
-            metadata: value.metadata_program,
+            rent: &value.rent,
+            system: &value.system_program,
+            token: &value.token_program,
+            associated_token: &value.associated_token_program,
+            metadata: &value.metadata_program,
         }
     }
 }
 
-impl<'info> From<MintNonFungible<'info>> for MinterPrograms<'info> {
-    fn from(value: MintNonFungible<'info>) -> Self {
+impl<'a, 'b> From<&'b MintNonFungible<'a>> for MinterPrograms<'a, 'b> {
+    fn from(value: &'b MintNonFungible<'a>) -> Self {
         Self {
-            rent: value.rent,
-            system: value.system_program,
-            token: value.token_program,
-            associated_token: value.associated_token_program,
-            metadata: value.metadata_program,
+            rent: &value.rent,
+            system: &value.system_program,
+            token: &value.token_program,
+            associated_token: &value.associated_token_program,
+            metadata: &value.metadata_program,
         }
     }
 }

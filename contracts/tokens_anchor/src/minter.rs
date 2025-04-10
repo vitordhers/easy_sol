@@ -13,30 +13,30 @@ use anchor_spl::{
 };
 use mpl_token_metadata::types::DataV2;
 
-pub struct Minter<'a> {
-    accounts: MinterAccounts<'a>,
-    programs: MinterPrograms<'a>,
+pub struct Minter<'a, 'b> {
+    accounts: MinterAccounts<'a, 'b>,
+    programs: MinterPrograms<'a, 'b>,
 }
 
-impl<'a> From<MintFungible<'a>> for Minter<'a> {
-    fn from(value: MintFungible<'a>) -> Self {
+impl<'a, 'b> From<&'b MintFungible<'a>> for Minter<'a, 'b> {
+    fn from(value: &'b MintFungible<'a>) -> Self {
         Self {
-            accounts: value.clone().into(),
+            accounts: value.into(),
             programs: value.into(),
         }
     }
 }
 
-impl<'a> From<MintNonFungible<'a>> for Minter<'a> {
-    fn from(value: MintNonFungible<'a>) -> Self {
+impl<'a, 'b> From<&'b MintNonFungible<'a>> for Minter<'a, 'b> {
+    fn from(value: &'b MintNonFungible<'a>) -> Self {
         Self {
-            accounts: value.clone().into(),
+            accounts: value.into(),
             programs: value.into(),
         }
     }
 }
 
-impl Minter<'_> {
+impl<'a, 'b> Minter<'a, 'b> {
     fn create_mint_account(&self) -> Result<()> {
         msg!("Creating mint account...");
         let rent = Rent::get()?;
@@ -151,7 +151,6 @@ impl Minter<'_> {
             edition: self
                 .accounts
                 .master_edition
-                .clone()
                 .expect("master edition account to be provided when creating master edition")
                 .to_account_info(),
             token_program: self.programs.token.to_account_info(),
