@@ -1,0 +1,5 @@
+node_modules
+test-ledger
+wallets/*
+contracts/target
+contracts/target/*
