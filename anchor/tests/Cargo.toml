@@ -8,4 +8,6 @@ edition = "2021"
 anchor-client = "0.31.0"
 spl-token = { workspace = true }
 spl-associated-token-account = { workspace = true }
+sha2 = "=0.10.8"
+
 tokens = { version = "0.1.0", path = "../programs/tokens" }

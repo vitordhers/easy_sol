@@ -50,7 +50,7 @@ impl<'a, 'b> Minter<'a, 'b> {
             ctx,
             rent_exemption_lamports,
             account_data_size as u64,
-            &self.accounts.mint_authority.key(),
+            &self.programs.token.key(),
         )?;
         msg!(
             "Mint account created successfully! {}",
@@ -177,7 +177,10 @@ impl<'a, 'b> Minter<'a, 'b> {
             }
         }
         self.create_metadata_account(data)?;
-        self.create_master_edition()?;
+
+        if let TokenData::NonFungible(_) = data {
+            self.create_master_edition()?;
+        }
         Ok(())
     }
 }
