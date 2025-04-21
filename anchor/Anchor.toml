@@ -6,20 +6,23 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-tokens = "5HYopUu3aUZ3CQC9AMq3iKa5Q9awF6aEm18jvHfKQ45r"
+tokens = "GCrqR8NeXX7j4ho8nPoJxojSS7deokj7W5mNBEdGSaqC"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
 cluster = "localnet"
-wallet = "~/.config/solana/id.json"
+wallet = "~/.config/solana/dev.json"
 
 [scripts]
-test = "cargo test"
+test = "cargo test -- --nocapture"
+start = "./scripts.sh start"
+continue = "./scripts.sh continue"
 
 [test]
-startup_wait = 10000
+upgradeable = true
+# startup_wait = 25000
 
 [[test.validator.clone]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"

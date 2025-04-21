@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ANCHOR_PROGRAMS=("tokens")
-
+CLONE_UPGRADEABLE_PROGRAMS=("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s")
 IS_RUNNING=false
 SELECTED_PROGRAM=""
 
@@ -44,18 +44,15 @@ case $1 in
       echo "Validator is already running!"
       exit 1
     fi
-
     CMD="solana-test-validator"
-    for arg in "$@"; do
-      case $arg in
-        --clone-programs)
-          CMD+=" --url https://api.mainnet-beta.solana.com"
-          echo "Cloning programs is not currently handled in this version."
-          # You can optionally add `--clone` args here
-          ;;
-      esac
+    echo "Cloning programs:"
+    for program in "${CLONE_UPGRADEABLE_PROGRAMS[@]}"; do
+      echo " - $program"
+      CMD+=" --clone-upgradeable-program $program"
     done
+    CMD+=" --url https://api.mainnet-beta.solana.com"
     [[ "$1" == "start" ]] && CMD+=" --reset"
+    CMD += " --log"
     eval "$CMD"
     ;;
 
